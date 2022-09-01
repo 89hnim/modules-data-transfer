@@ -12,8 +12,8 @@ class FeatureAActivity : AppCompatActivity() {
     private val collector = object : OneDataTransfer.Collector() {
         override fun onDataChanged(data: String) {
             Log.e("DSK", "onDataChanged: Feature A $data")
-//            OneDataTransfer.get().removeCollector(this)
-//            OneDataTransfer.get().removeStickyData(data)
+            OneDataTransfer.get().removeCollector(this)
+            OneDataTransfer.get().removeStickyData(data)
         }
     }
 
@@ -25,7 +25,6 @@ class FeatureAActivity : AppCompatActivity() {
     }
 
     fun emitValue(view: View) {
-        OneDataTransfer.get().emit(TestA("Value from feature A"))
         OneDataTransfer.get().emit(TestA("Value from feature A"))
     }
 
