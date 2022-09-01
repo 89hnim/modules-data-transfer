@@ -12,4 +12,10 @@
         android:onClick="emitValue"
         android:text="Emit value" />
 
+    <Button
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:onClick="emitListValue"
+        android:text="Emit list value" />
+
 </androidx.constraintlayout.widget.ConstraintLayout>

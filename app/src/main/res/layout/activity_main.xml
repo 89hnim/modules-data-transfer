@@ -24,4 +24,10 @@
         android:onClick="emitValue"
         android:text="Emit sticky value" />
 
+    <Button
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:onClick="emitValueB"
+        android:text="Emit sticky value for scope FeatureB" />
+
 </androidx.appcompat.widget.LinearLayoutCompat>

@@ -5,14 +5,15 @@ import android.os.Bundle
 import android.util.Log
 import android.view.View
 import m.tech.datatransfer.OneDataTransfer
+import m.tech.datatransfer.scope.OneDataTransferScope
 
 class FeatureAActivity : AppCompatActivity() {
 
-    private val collector = object: OneDataTransfer.Collector() {
-        override fun onDataChanged(data: Any) {
+    private val collector = object : OneDataTransfer.Collector() {
+        override fun onDataChanged(data: String) {
             Log.e("DSK", "onDataChanged: Feature A $data")
-            OneDataTransfer.get().removeCollector(this)
-            OneDataTransfer.get().removeStickyData(data)
+//            OneDataTransfer.get().removeCollector(this)
+//            OneDataTransfer.get().removeStickyData(data)
         }
     }
 
@@ -25,9 +26,10 @@ class FeatureAActivity : AppCompatActivity() {
 
     fun emitValue(view: View) {
         OneDataTransfer.get().emit(TestA("Value from feature A"))
+        OneDataTransfer.get().emit(TestA("Value from feature A"))
     }
 
-    override fun onDestroy() {
-        super.onDestroy()
+    fun emitListValue(view: View) {
+        OneDataTransfer.get().emit(listOf(TestA("Value from feature A")))
     }
 }

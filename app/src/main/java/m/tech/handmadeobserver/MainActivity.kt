@@ -6,6 +6,7 @@ import android.util.Log
 import android.view.View
 import androidx.appcompat.app.AppCompatActivity
 import m.tech.datatransfer.OneDataTransfer
+import m.tech.datatransfer.scope.OneDataTransferScope
 import m.tech.datatransfer.strategy.OneDataTransferStrategy
 import m.tech.feature_a.FeatureAActivity
 import m.tech.feature_b.FeatureBActivity
@@ -17,10 +18,10 @@ class MainActivity : AppCompatActivity() {
         setContentView(R.layout.activity_main)
 
         OneDataTransfer.get().collect(object : OneDataTransfer.Collector() {
-            override fun onDataChanged(data: Any) {
+            override fun onDataChanged(data: String) {
                 Log.e("DSK", "onDataChanged: mainAct $data")
             }
-        }, OneDataTransferStrategy.LifecycleAware(this))
+        }, OneDataTransferScope.Application, OneDataTransferStrategy.LifecycleAware(this))
     }
 
     fun navA(view: View) {
@@ -32,6 +33,14 @@ class MainActivity : AppCompatActivity() {
     }
 
     fun emitValue(view: View) {
-        OneDataTransfer.get().emit("Sticky event from main act", true)
+        OneDataTransfer
+            .get()
+            .emit("Sticky event from main act", OneDataTransferScope.Application, true)
+    }
+
+    fun emitValueB(view: View) {
+        OneDataTransfer
+            .get()
+            .emit("Sticky event from main act", OneDataTransferScope.Custom("FeatureB"), true)
     }
 }
