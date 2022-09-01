@@ -56,7 +56,6 @@ class OneDataTransfer {
         internalCoroutineScope.launch {
             val rawData = gson.toJson(data)
             collectorLocker.withLock {
-                Log.e("DSK", "emit: emitting $data ${data.hashCode()}")
                 collectors.forEach { collectorWeakRef ->
                     collectorWeakRef.get()?.let { collector ->
                         // check if collector's scope is the same with emitting data scope
@@ -96,6 +95,8 @@ class OneDataTransfer {
             collectorLocker.withLock {
                 collectors.add(OneCollectorWeakReference(collector))
             }
+
+            // emit sticky data to the collector
             stickyDataLocker.withLock {
                 stickyData.forEach {
                     val data = it.first
@@ -105,11 +106,15 @@ class OneDataTransfer {
                     }
                 }
             }
+
+            // setup lifecycle aware
             if (strategy is OneDataTransferStrategy.LifecycleAware) {
                 strategy.owner?.lifecycle?.addObserver(object : OneDefaultLifecycleObserver() {
                     override fun onStart(owner: LifecycleOwner) {
                         super.onStart(owner)
                         collector.isActive = true
+
+                        // invoke pending collector (in case the view returns visible)
                         pendingCollectors[collector.hashCode()]?.let { pendingCollector ->
                             pendingCollector.invoke()
                             pendingCollectors.remove(collector.hashCode())
@@ -135,14 +140,14 @@ class OneDataTransfer {
         internalCoroutineScope.launch {
             collectorLocker.withLock {
                 collectors.removeAll {
-                    it.get() == null || it.get().hashCode() == collector.hashCode()
+                    it.get() == null || it.hashCode() == collector.hashCode()
                 }
             }
         }
     }
 
     fun removeStickyData(
-        data: Any,
+        data: String,
         scope: OneDataTransferScope = OneDataTransferScope.Application
     ) {
         internalCoroutineScope.launch {
