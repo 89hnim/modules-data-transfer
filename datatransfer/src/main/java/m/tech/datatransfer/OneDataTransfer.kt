@@ -13,20 +13,21 @@ import m.tech.datatransfer.lifecycle.OneDefaultLifecycleObserver
 import m.tech.datatransfer.scope.OneDataTransferScope
 import m.tech.datatransfer.strategy.OneDataTransferStrategy
 import m.tech.datatransfer.utils.OneCollectorWeakReference
-import java.util.concurrent.ConcurrentHashMap
+import m.tech.datatransfer.utils.OnePendingCollector
 
-typealias PendingCollector = () -> Unit
-typealias StickyData = Pair<String, OneDataTransferScope>
+// pair: raw data - scope
+internal typealias StickyData = Pair<String, OneDataTransferScope>
 
 class OneDataTransfer {
 
     private val internalCoroutineScope = CoroutineScope(Dispatchers.Main + SupervisorJob())
     private val collectorLocker = Mutex()
     private val stickyDataLocker = Mutex()
+    private val pendingCollectorsLocker = Mutex()
 
     private val collectors = hashSetOf<OneCollectorWeakReference>()
     private val stickyData = hashSetOf<StickyData>()
-    private val pendingCollectors = ConcurrentHashMap<Int, PendingCollector?>()
+    private val pendingCollectors = hashSetOf<OnePendingCollector>()
 
     private val gson = Gson()
 
@@ -65,8 +66,15 @@ class OneDataTransfer {
                                 collector.onDataChanged(rawData)
                             } else {
                                 // if not active, add to pending collectors queue to execute later
-                                pendingCollectors[collector.hashCode()] =
-                                    { collector.onDataChanged(rawData) }
+                                pendingCollectorsLocker.withLock {
+                                    pendingCollectors.add(
+                                        OnePendingCollector(
+                                            collectorHashCode = collector.hashCode(),
+                                            rawData = rawData,
+                                            pendingExecution = { collector.onDataChanged(rawData) }
+                                        )
+                                    )
+                                }
                             }
                         }
                     }
@@ -115,10 +123,7 @@ class OneDataTransfer {
                         collector.isActive = true
 
                         // invoke pending collector (in case the view returns visible)
-                        pendingCollectors[collector.hashCode()]?.let { pendingCollector ->
-                            pendingCollector.invoke()
-                            pendingCollectors.remove(collector.hashCode())
-                        }
+                        invokePendingCollectors(collector.hashCode())
                     }
 
                     override fun onStop(owner: LifecycleOwner) {
@@ -132,6 +137,19 @@ class OneDataTransfer {
                         removeCollector(collector)
                     }
                 })
+            }
+        }
+    }
+
+    private fun invokePendingCollectors(collectorHashCode: Int) {
+        internalCoroutineScope.launch {
+            pendingCollectorsLocker.withLock {
+                // trigger collect of all pending collectors
+                pendingCollectors.filter { it.collectorHashCode == collectorHashCode }.forEach {
+                    it.pendingExecution.invoke()
+                }
+                // remove pending collectors after collected
+                pendingCollectors.removeAll { it.collectorHashCode == collectorHashCode }
             }
         }
     }

@@ -19,9 +19,15 @@ class MainActivity : AppCompatActivity() {
 
         OneDataTransfer.get().collect(object : OneDataTransfer.Collector() {
             override fun onDataChanged(data: String) {
-                Log.e("DSK", "onDataChanged: mainAct $data")
+                Log.e("DSK", "onDataChanged: mainAct [Application] $data")
             }
         }, OneDataTransferScope.Application, OneDataTransferStrategy.LifecycleAware(this))
+
+        OneDataTransfer.get().collect(object : OneDataTransfer.Collector() {
+            override fun onDataChanged(data: String) {
+                Log.e("DSK", "onDataChanged: mainAct [FeatureB] $data")
+            }
+        }, OneDataTransferScope.Custom("FeatureB"), OneDataTransferStrategy.LifecycleAware(this))
     }
 
     fun navA(view: View) {
@@ -42,5 +48,8 @@ class MainActivity : AppCompatActivity() {
         OneDataTransfer
             .get()
             .emit("Sticky event from main act", OneDataTransferScope.Custom("FeatureB"), true)
+        OneDataTransfer
+            .get()
+            .emit("Sticky event 2 from main act", OneDataTransferScope.Custom("FeatureB"), true)
     }
 }
