@@ -169,7 +169,7 @@ class OneDataTransfer {
         scope: OneDataTransferScope = OneDataTransferScope.Application
     ) {
         internalCoroutineScope.launch {
-            collectorLocker.withLock {
+            stickyDataLocker.withLock {
                 stickyData.removeAll { it.first == data && it.second == scope }
             }
         }
