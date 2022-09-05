@@ -59,3 +59,8 @@ OneDataTransfer.get().collect(object : OneDataTransfer.Collector() {
     }
 }, OneDataTransferScope.Custom("FeatureB"), OneDataTransferStrategy.LifecycleAware(this))
 ```
+
+If you don't use Lifecycle-Aware Strategy, you should remove collector by manual:
+```kotlin
+OneDataTransfer.get().removeCollector(collector)
+```
